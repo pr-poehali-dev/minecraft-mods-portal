@@ -81,6 +81,16 @@ const initialMods: Mod[] = [
     author: 'SkyExplorer',
     version: '1.20.1',
     image: '☁️'
+  },
+  {
+    id: 7,
+    name: 'Saw',
+    description: 'Saw horror mod',
+    category: 'tech',
+    downloads: 12932,
+    author: 'Smaev',
+    version: '1.21.1',
+    image: '🪚'
   }
 ];
 
