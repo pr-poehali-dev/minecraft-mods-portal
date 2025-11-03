@@ -253,11 +253,11 @@ export default function Index() {
                   </div>
                   
                   <div>
-                    <Label htmlFor="file">Файл мода (.jar)</Label>
+                    <Label htmlFor="file">Файл мода (.jar, .zip, .exe)</Label>
                     <Input
                       id="file"
                       type="file"
-                      accept=".jar,.zip"
+                      accept=".jar,.zip,.exe"
                       onChange={handleFileUpload}
                       className="pixel-corners"
                     />
