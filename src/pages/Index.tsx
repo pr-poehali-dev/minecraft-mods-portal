@@ -19,6 +19,7 @@ interface Mod {
   author: string;
   version: string;
   image: string;
+  downloadUrl?: string;
 }
 
 const initialMods: Mod[] = [
@@ -109,6 +110,7 @@ export default function Index() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const [newMod, setNewMod] = useState({
     name: '',
@@ -130,6 +132,38 @@ export default function Index() {
     const file = e.target.files?.[0];
     if (file) {
       setNewMod({ ...newMod, file });
+    }
+  };
+
+  const handleDownload = (mod: Mod) => {
+    if (mod.id === 7) {
+      fileInputRef.current?.click();
+    } else {
+      toast({
+        title: "Скачивание",
+        description: `Загрузка мода "${mod.name}"...`,
+      });
+    }
+  };
+
+  const handleSawFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      const updatedMods = mods.map(m => 
+        m.id === 7 ? { ...m, downloadUrl: url } : m
+      );
+      setMods(updatedMods);
+      
+      toast({
+        title: "Файл загружен!",
+        description: `Файл "${file.name}" привязан к моду Saw`,
+      });
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.name;
+      link.click();
     }
   };
 
@@ -345,9 +379,12 @@ export default function Index() {
                   </div>
                 </div>
                 
-                <Button className="w-full bg-grass hover:bg-grass/90 text-white pixel-corners pixel-shadow">
+                <Button 
+                  onClick={() => handleDownload(mod)}
+                  className="w-full bg-grass hover:bg-grass/90 text-white pixel-corners pixel-shadow"
+                >
                   <Icon name="Download" size={18} className="mr-2" />
-                  Скачать
+                  {mod.id === 7 ? 'Загрузить файл' : 'Скачать'}
                 </Button>
               </div>
             </Card>
