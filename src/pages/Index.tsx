@@ -105,7 +105,10 @@ const categories = [
 ];
 
 export default function Index() {
-  const [mods, setMods] = useState<Mod[]>(initialMods);
+  const [mods, setMods] = useState<Mod[]>(() => {
+    const saved = localStorage.getItem('modFiles');
+    return saved ? JSON.parse(saved) : initialMods;
+  });
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -164,20 +167,53 @@ export default function Index() {
     setEditModId(modId);
   };
 
-  const handleModFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleModFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && editModId) {
-      const url = URL.createObjectURL(file);
-      const updatedMods = mods.map(m => 
-        m.id === editModId ? { ...m, downloadUrl: url } : m
-      );
-      setMods(updatedMods);
-      setEditModId(null);
-      
-      toast({
-        title: "Файл загружен!",
-        description: `Файл "${file.name}" привязан к моду`,
-      });
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64Content = reader.result?.toString().split(',')[1];
+        
+        try {
+          const response = await fetch('https://functions.poehali.dev/f328712b-c446-4560-9833-a6041051cf90', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              fileName: file.name,
+              fileContent: base64Content,
+              modId: editModId.toString()
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.uploaded) {
+            const updatedMods = mods.map(m => 
+              m.id === editModId ? { 
+                ...m, 
+                downloadUrl: `data:application/octet-stream;base64,${result.fileContent}` 
+              } : m
+            );
+            setMods(updatedMods);
+            localStorage.setItem('modFiles', JSON.stringify(updatedMods));
+            setEditModId(null);
+            
+            toast({
+              title: "Файл загружен!",
+              description: `Файл "${file.name}" сохранён и доступен для скачивания`,
+            });
+          }
+        } catch (error) {
+          toast({
+            title: "Ошибка загрузки",
+            description: "Не удалось загрузить файл на сервер",
+            variant: "destructive"
+          });
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
