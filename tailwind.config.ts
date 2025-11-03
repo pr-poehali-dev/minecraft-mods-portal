@@ -19,6 +19,12 @@ export default {
 		},
 		extend: {
 			colors: {
+				grass: 'rgb(var(--grass) / <alpha-value>)',
+				dirt: 'rgb(var(--dirt) / <alpha-value>)',
+				sky: 'rgb(var(--sky) / <alpha-value>)',
+				stone: 'rgb(var(--stone) / <alpha-value>)',
+				dark: 'rgb(var(--dark) / <alpha-value>)',
+				light: 'rgb(var(--light) / <alpha-value>)',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
