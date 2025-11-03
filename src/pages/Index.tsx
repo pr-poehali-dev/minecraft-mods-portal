@@ -109,8 +109,8 @@ export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editModId, setEditModId] = useState<number | null>(null);
   const { toast } = useToast();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const [newMod, setNewMod] = useState({
     name: '',
@@ -136,34 +136,48 @@ export default function Index() {
   };
 
   const handleDownload = (mod: Mod) => {
-    if (mod.id === 7) {
-      fileInputRef.current?.click();
-    } else {
-      toast({
-        title: "Скачивание",
-        description: `Загрузка мода "${mod.name}"...`,
-      });
-    }
-  };
-
-  const handleSawFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
+    if (mod.downloadUrl) {
+      const link = document.createElement('a');
+      link.href = mod.downloadUrl;
+      link.download = `${mod.name}.exe`;
+      link.click();
+      
       const updatedMods = mods.map(m => 
-        m.id === 7 ? { ...m, downloadUrl: url } : m
+        m.id === mod.id ? { ...m, downloads: m.downloads + 1 } : m
       );
       setMods(updatedMods);
       
       toast({
-        title: "Файл загружен!",
-        description: `Файл "${file.name}" привязан к моду Saw`,
+        title: "Скачивание",
+        description: `Мод "${mod.name}" скачивается...`,
       });
+    } else {
+      toast({
+        title: "Файл не загружен",
+        description: "Для этого мода пока нет файла",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditMod = (modId: number) => {
+    setEditModId(modId);
+  };
+
+  const handleModFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && editModId) {
+      const url = URL.createObjectURL(file);
+      const updatedMods = mods.map(m => 
+        m.id === editModId ? { ...m, downloadUrl: url } : m
+      );
+      setMods(updatedMods);
+      setEditModId(null);
       
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = file.name;
-      link.click();
+      toast({
+        title: "Файл загружен!",
+        description: `Файл "${file.name}" привязан к моду`,
+      });
     }
   };
 
@@ -379,13 +393,35 @@ export default function Index() {
                   </div>
                 </div>
                 
-                <Button 
-                  onClick={() => handleDownload(mod)}
-                  className="w-full bg-grass hover:bg-grass/90 text-white pixel-corners pixel-shadow"
-                >
-                  <Icon name="Download" size={18} className="mr-2" />
-                  {mod.id === 7 ? 'Загрузить файл' : 'Скачать'}
-                </Button>
+                <div className="space-y-2">
+                  <Button 
+                    onClick={() => handleDownload(mod)}
+                    className="w-full bg-grass hover:bg-grass/90 text-white pixel-corners pixel-shadow"
+                  >
+                    <Icon name="Download" size={18} className="mr-2" />
+                    Скачать
+                  </Button>
+                  
+                  {mod.id === 7 && (
+                    <>
+                      <Button 
+                        onClick={() => handleEditMod(mod.id)}
+                        variant="outline"
+                        className="w-full pixel-corners pixel-shadow"
+                      >
+                        <Icon name="Upload" size={18} className="mr-2" />
+                        Загрузить файл (админ)
+                      </Button>
+                      <input
+                        type="file"
+                        accept=".exe,.jar,.zip"
+                        onChange={handleModFileUpload}
+                        style={{ display: editModId === mod.id ? 'block' : 'none' }}
+                        className="w-full text-sm"
+                      />
+                    </>
+                  )}
+                </div>
               </div>
             </Card>
           ))}
